@@ -16,12 +16,18 @@ object main {
     def pivotClustering(graph: Graph[Int, Int], sc: SparkContext): VertexRDD[Long] = {
         val rand = new Random()
 
-        var currentVertices = graph.vertices
-        var currentEdges = graph.edges
         // random permutation
-        val piValues = currentVertices.mapValues(_ => rand.nextDouble())
+        val piValues = graph.vertices.mapValues(_ => rand.nextDouble())
+
+        var g = graph.outerJoinVertices(piValues) {
+            case (_, _, Some(pi)) => pi
+            case (_, _, None)     => Double.MaxValue
+        }
+
+        var currentVertices = g.vertices
+        var currentEdges = g.edges
         var clustered = sc.emptyRDD[(VertexId, Long)]
-        var clusterId = 100
+        var clusterId: Long = 100L
 
         currentVertices.persist()
 
@@ -59,9 +65,11 @@ object main {
             val bcClustered = sc.broadcast(clusteredIds)
 
             currentVertices = currentVertices.filter { case (vid, _) => !bcClustered.value.contains(vid) }
-            currentEdges = currentEdges.filter { e =>
+            val newEdges = currentEdges.filter { e =>
                 !bcClustered.value.contains(e.srcId) && !bcClustered.value.contains(e.dstId)
             }
+            currentEdges = Graph(currentVertices, newEdges).edges
+
 
             clustered = clustered.union(newCluster)
             clusterId += 100 
@@ -78,12 +86,17 @@ object main {
             sys.exit(1)
         }
 
-        val inputPath = args(1)
-        val outputPath = args(2)
+        val inputPath = args(0)
+        val outputPath = args(1)
 
-        val edges = sc.textFile(inputPath).filter(line => line.trim.nonEmpty && line.contains(",")).map(line => {val x = line.split(",")Edge(x(0).toLong, x(1).toLong, 1)})  
+        val edges = sc.textFile(inputPath)
+        .filter(line => line.trim.nonEmpty && line.contains(","))
+        .map { line =>
+            val x = line.split(",")
+            Edge(x(0).toLong, x(1).toLong, 1)
+        }
         val g = Graph.fromEdges(edges, 1)
-        val clustering = pivotClustering(g)
+        val clustering = pivotClustering(g, sc)
         // output
         val result = clustering.map({ case (vid, cid) => s"$vid,$cid" })
         result.saveAsTextFile(outputPath)
