@@ -13,7 +13,7 @@ object main {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
     Logger.getLogger("org.spark-project").setLevel(Level.WARN)
 
-    def pivotClustering(graph: Graph[Int, Int], sc: SparkContext): VertexRDD[Long] = {
+    def pivotClustering(graph: Graph[Int, Int], sc: SparkContext): Graph[Long, Int] = {
         val rand = new Random()
 
         // random permutation
@@ -74,12 +74,14 @@ object main {
             clustered = clustered.union(newCluster)
             clusterId += 100 
         }
-        VertexRDD(clustered)
+        val clusteredGraph = Graph(clustered.reduceByKey((a, _) => a), graph.edges)
+        clusteredGraph
     }
 
     def main(args: Array[String]): Unit = {
         val conf = new SparkConf().setAppName("clustering")
         val sc = new SparkContext(conf)
+        val spark = SparkSession.builder.config(conf).getOrCreate()
 
         if(args.length != 2) {
             println("Usage: clustering input_path output_path")
@@ -98,7 +100,7 @@ object main {
         val g = Graph.fromEdges(edges, 1)
         val clustering = pivotClustering(g, sc)
         // output
-        val result = clustering.map({ case (vid, cid) => s"$vid,$cid" })
-        result.saveAsTextFile(outputPath)
+        val output = spark.createDataFrame(clustering.vertices)
+        output.coalesce(1).write.format("csv").mode("overwrite").save(args(1))
     }
 }
