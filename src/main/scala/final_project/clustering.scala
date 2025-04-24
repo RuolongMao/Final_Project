@@ -14,31 +14,24 @@ object main {
     Logger.getLogger("org.spark-project").setLevel(Level.WARN)
 
     def pivotClustering(graph: Graph[Int, Int]): VertexRDD[Long] = {
-        var remainingGraph = graph.mapVertices((id, _) => True)
-        var clusteredVertices = graph.vertices.mapValues(_ => -1)
-        var clusterId = 0
+        val rand = new Random()
 
-        while (remainingGraph.vertices.filter(_._2).count > 0) {
-            // 随机选pivot
-            val pivotOpt = remainingGraph.vertices.filter(_._2).takeSample(False, 1).headOption
-            if (pivotOpt.isEmpty) {
-            return clusteredVertices
-            }
+        // random permutation
+        val piValues = graph.vertices.mapValues(_ => rand.nextDouble())
 
-            val pivot = pivotOpt.get._1
-
-            // 找没分类的邻居
-            val neighbors = remainingGraph.aggregateMessages[Boolean](
-            triplet => {
-                if (triplet.srcId == pivot && triplet.dstAttr)
-                triplet.sendToDst(True)
-                else if (triplet.dstId == pivot && triplet.srcAttr)
-                triplet.sendToSrc(True)
-            },
-            (a, b) => True
-            )
+        while (currentVertices.count() > 0) {
+            // select pivot with smallest pi
+            val minNeighborPi = Graph(currentVertices, currentEdges)
+                .aggregateMessages[Double](
+                triplet => {
+                    if (triplet.srcAttr > triplet.dstAttr)
+                    triplet.sendToSrc(triplet.dstAttr)
+                    else if (triplet.dstAttr > triplet.srcAttr)
+                    triplet.sendToDst(triplet.srcAttr)
+                },
+                (a, b) => math.min(a, b)
+                )
         }
-        ...
     }
 
     def main(args: Array[String]): Unit = {
