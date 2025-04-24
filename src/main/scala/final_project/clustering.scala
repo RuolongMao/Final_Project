@@ -78,8 +78,8 @@ object main {
             sys.exit(1)
         }
 
-        val inputPath = args(0)
-        val outputPath = args(1)
+        val inputPath = args(1)
+        val outputPath = args(2)
 
         val edges = sc.textFile(inputPath).filter(line => line.trim.nonEmpty && line.contains(",")).map(line => {val x = line.split(",")Edge(x(0).toLong, x(1).toLong, 1)})  
         val g = Graph.fromEdges(edges, 1)
