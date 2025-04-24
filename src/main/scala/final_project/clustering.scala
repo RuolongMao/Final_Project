@@ -13,7 +13,7 @@ object main {
     Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
     Logger.getLogger("org.spark-project").setLevel(Level.WARN)
 
-    def pivotClustering(graph: Graph[Int, Int]): VertexRDD[Long] = {
+    def pivotClustering(graph: Graph[Int, Int], sc: SparkContext): VertexRDD[Long] = {
         val rand = new Random()
 
         var currentVertices = graph.vertices
@@ -23,7 +23,9 @@ object main {
         var clustered = sc.emptyRDD[(VertexId, Long)]
         var clusterId = 100
 
-        while (currentVertices.count() > 0) {
+        currentVertices.persist()
+
+        while (!currentVertices.isEmpty()) {
             // select pivot with smallest pi
             val minNeighborPi = Graph(currentVertices, currentEdges)
                 .aggregateMessages[Double](
