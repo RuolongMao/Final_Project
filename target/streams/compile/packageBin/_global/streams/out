@@ -1,13 +1,31 @@
 [0m[[0m[0mdebug[0m] [0m[0mPackaging D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\clustering_2.12-1.0.jar ...[0m
 [0m[[0m[0mdebug[0m] [0m[0mInput file mappings:[0m
-[0m[[0m[0mdebug[0m] [0m[0m	clustering[0m
-[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\clustering[0m
-[0m[[0m[0mdebug[0m] [0m[0m	clustering\main$.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\clustering\main$.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	clustering\main.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\clustering\main.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	final_project[0m
 [0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project[0m
+[0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_general$$typecreator1$1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_general$$typecreator1$1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_general$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_general$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_general$BreakException.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_general$BreakException.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_general.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_general.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_og$$typecreator1$1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_og$$typecreator1$1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_og$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_og$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_og$BreakException.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_og$BreakException.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_og.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_og.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_small_graph$$typecreator1$1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_small_graph$$typecreator1$1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_small_graph$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_small_graph$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_small_graph$BreakException.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_small_graph$BreakException.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_small_graph.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_small_graph.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_verifier$.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_verifier$.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_verifier$VertexData$1.class[0m
@@ -16,8 +34,4 @@
 [0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_verifier$VertexData$2$.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	final_project\clustering_verifier.class[0m
 [0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\clustering_verifier.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	final_project\matching_verifier$.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\matching_verifier$.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	final_project\matching_verifier.class[0m
-[0m[[0m[0mdebug[0m] [0m[0m	  D:\BaiduNetdiskDownload\Large-Scale Data Processing\Final_Project\target\scala-2.12\classes\final_project\matching_verifier.class[0m
 [0m[[0m[0mdebug[0m] [0m[0mDone packaging.[0m

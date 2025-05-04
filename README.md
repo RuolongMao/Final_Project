@@ -1,123 +1,79 @@
 # Large Scale Data Processing: Final Project
-For the final project, you are provided 6 CSV files, each containing an undirected graph, which can be found [here](https://drive.google.com/file/d/1khb-PXodUl82htpyWLMGGNrx-IzC55w8/view?usp=sharing). The files are as follows:  
 
-|           File name           |        Number of edges       |
-| ------------------------------| ---------------------------- |
-| com-orkut.ungraph.csv         | 117185083                    |
-| twitter_original_edges.csv    | 63555749                     |
-| soc-LiveJournal1.csv          | 42851237                     |
-| soc-pokec-relationships.csv   | 22301964                     |
-| musae_ENGB_edges.csv          | 35324                        |
-| log_normal_100.csv            | 2671                         |  
+## 1. A table containing the objective of the solution (i.e. the size of matching or the number of disagreements of clustering) you obtained for each test case. The objectives must correspond to the matchings or the clusterings in your output files.
 
+| Dataset | Edges | No. Disagreements | No. Clusters |
+|---------|-------|------------------|--------------|
+| log_normal_100 | 2,671 | 1,711 | 11 |
+| musae_ENGB | 35,324 | 33,162 | 5,386 |
+| soc-pokec-relationships | 22,301,964 | 20,768,386 | 209,088 |
+| soc-LiveJournal1 | 42,851,237 | 36,727,198 | 463,864 |
+| com-orkut.ungraph | 63,555,749 | 110,057,584 | 47,245 |
+| twitter_original_edges | 117,185,083 | 85,123,563 | 1,115,984 |
 
-You can choose to work on **matching** or **correlation clustering**. 
+## 2. An estimate of the amount of computation used for each test case. For example, "the program runs for 15 minutes on a 2x4 N1 core CPU in GCP." If you happen to be executing multiple algorithms on a test case, report the total running time.
 
-## Matching
+| Dataset | Duration | Machine |
+|---------|----------|---------|
+| log_normal_100 | 3.036s | Local |
+| musae_ENGB | 5.736s | Local |
+| soc-pokec-relationships | 4min 13s | GCP |
+| soc-LiveJournal1 | 10min 6s | GCP |
+| com-orkut.ungraph | 9min 1s | GCP |
+| twitter_original_edges | 18min 57s | GCP |
 
-Your goal is to compute a matching as large as possible for each graph. 
+### GCP Cluster Configuration
+- Master Node: Standard (1 master, N workers)
+- Machine Type: n1-standard-4
+- Worker Node: 4
+- Machine Type: n1-standard-4 (4x4 N1 core CPU)
+- Properties:
+  - spark.executor.memory=8g
+  - spark.driver.memory=4g
 
-### Input format
-Each input file consists of multiple lines, where each line contains 2 numbers that denote an undirected edge. For example, the input below is a graph with 3 edges.  
-1,2  
-3,2  
-3,4  
+## 3. Approach Description
 
-### Output format
-Your output should be a CSV file listing all of the matched edges, 1 on each line. For example, the ouput below is a 2-edge matching of the above input graph. Note that `3,4` and `4,3` are the same since the graph is undirected.  
-1,2  
-4,3  
+Our implementations define a distributed pivot-based clustering algorithm using Apache Spark's GraphX library. The main objective is to partition a graph into clusters by iteratively identifying pivot nodes based on randomly assigned priority values and grouping them with their neighbors.
 
-## Correlation Clustering
+Three different approaches are used to perform clustering depending on the graph size and computational constraints. For all three approaches, to ensure randomness, each run's random function is seeded with the system's current time mill with the exception of the first graph (as one seed was identified to be outperforming others).
 
-Your goal is to compute a clustering that has disagreements as small as possible for each graph. 
+### Clustering with Neighbor Connectivity Check and Optimization (for graph 1)
+For the smallest log_normal_100 graph, we used a two-step algorithm:
 
-### Input format
-Each input file consists of multiple lines, where each line contains 2 numbers that denote an undirected edge. For example, the input below is a graph with 3 (positive) edges.  
-1,2  
-3,2  
-3,4  
+#### Initial clustering using the Parallelized PIVOT algorithm
+- We first assign each vertex a random pi value. Then, we identify the vertex with the smallest pi value in comparison with all of its neighbors as our pivot candidates.
+- Using the pivot candidates, each pivot's neighbors are examined to determine if they are also interconnected in consideration of how the number of disagreements is calculated based on both clusters crossing edges and non-existed edges inside clusters.
+- A pivot's neighbor would be clustered into a cluster only if it is considered to be well connected with other neighbors (at least half) of said pivot. This is to ensure that neighbors of a selected pivot are not blindly clustered when they might not be connected to other members of the cluster. If a vertex is considered to be not well connected to others, it is filtered out from the next round of consideration. We also continue filtering until no more vertices are removed, guaranteeing all remaining vertices meet the connectivity threshold.
+- Also note that the threshold changes with the number of iterations. Threshold is loosened to start out strictly and then allow recovery when clusters become smaller, which helps with preventing over-fragmentation of clusters – something we noticed with earlier experimentations.
 
-The 3 remaining pairs of vertices that do not appear in the above list denote negative edges. They are (2,4), (1,4), (1,3).
+#### Refinement and optimization
+- After the initial clustering, we calculate current disagreements within the algorithm and check whether moving each vertex to a neighboring cluster can decrease the overall number of edges crossing clusters. If so, the vertex is reassigned. The loop continues until no further improvements can be done or a pre-set number of iterations is reached.
+- A range of numbers from 5 to 50 iterations are used to determine the best outcome from the verifier. The number of iterations we used to achieve the result in the table is 10.
 
-### Output format
-Your output should be a CSV file describing all of the clusters. The number of lines should be equal to the number of vertices. Each line consists two numbers, the vertex ID and the cluster ID.
+### Clustering with Neighbor Connectivity Check (for graph 2)
+For the second smallest musae_ENGB graph, we discovered that the refinement process previously working well on the 100 vertices graph is adversely interfering with our verifier outcome. Therefore, we reversed back a step and used the pivot selection and neighbor filtering method described in the previous subsection.
 
-For example, the output below denotes vertex 1, vertex 3, and vertex 4 are in one cluster and vertex 2 forms a singleton cluster.  The clustering has a 4 disagreements.  
-1,100  
-2,200  
-4,100  
-3,100  
+### Parallel PIVOT (for large graphs: graph 3 and onwards)
+For the larger graphs, we simplify the process into its barebone for scalability. However, the core ideas remain unchanged:
+- Each vertex receives a random double value (piValue) used to determine local pivot points.
+- For each vertex, its direct neighbors are collected using edge traversal.
+- Note that priority maps and vertex sets are broadcast to minimize shuffling and improve performance in a distributed setting. This is to maximize the benefits of the implementation with an efficient use of RDDs.
+- A vertex is considered a pivot if its priority is less than or equal to all its neighbors'.
+- Each pivot and its neighbors form a new cluster. Vertices are assigned a cluster ID.
+- Clustered vertices are removed from the current graph; the loop continues on remaining vertices.
 
+### General Strategy
+Our clustering framework is designed to be adaptive and resource-aware, allowing us to select from multiple algorithmic approaches depending on the size and complexity of the input graph as well as the available computational resources. When a new test case is introduced, we assess the characteristics of the graph—primarily its scale (number of vertices and edges) and the memory and compute availability in the environment.
 
-## No template is provided
-For the final project, you will need to write everything from scratch. Feel free to consult previous projects for ideas on structuring your code. That being said, you are provided a verifier that can confirm whether or not your output is a matching or a clustering. As usual, you'll need to compile it with
-```
-sbt clean package
-```  
-### Matching
+If the graph is small to moderately sized, and system resources are sufficient to support more computation-heavy techniques, we apply either Approach 1 or Approach 2. These methods aim to produce high-quality clusters with minimal internal noise and lower disagreement metrics. These approaches are particularly effective for graphs with moderate complexity, where computation cost is manageable and fine-grained clustering is desired.
 
-The matching verifier accepts 2 file paths as arguments, the first being the path to the file containing the initial graph and the second being the path to the file containing the matching. It can be ran locally with the following command (keep in mind that your file paths may be different):
-```
-// Linux
-spark-submit --master local[*] --class final_project.matching_verifier target/scala-2.12/project_3_2.12-1.0.jar /data/log_normal_100.csv data/log_normal_100_matching.csv
+If the input graph is very large, or if the system is running under limited memory conditions (e.g., heap space constraints or risk of stack overflow), we employ Approach 3, a simplified version of the pivot clustering algorithm. While this method may yield clusters of slightly lower quality, it ensures that the clustering process completes efficiently and reliably, even for datasets with millions of nodes and edges. It is a pragmatic fallback that prioritizes scalability and fault tolerance in memory-constrained environments without crashing the heap space memory or overflowing the stack.
 
-// Unix
-spark-submit --master "local[*]" --class "final_project.matching_verifier" target/scala-2.12/project_3_2.12-1.0.jar data/log_normal_100.csv data/log_normal_100_matching.csv
-```
+## 4. Algorithm Advantages and Guarantees
 
-### Correlation Clustering
+The parallelized PIVOT algorithm guarantees a small number of shuffle rounds in a distributed system. It runs in O(log log n) rounds, where n is the number of vertices. Moreover, it guarantees a 3-approximation to the optimal correlation clustering.
 
-The clustering verifier accepts 2 file paths as arguments, the first being the path to the file containing the initial graph and the second being the path to the file describing the clustering. It can be ran locally with the following command (keep in mind that your file paths may be different):
-```
-// Linux
-spark-submit --master local[*] --class final_project.clustering_verifier target/scala-2.12/project_3_2.12-1.0.jar /data/log_normal_100.csv data/log_normal_100_clustering.csv
+The PIVOT + optimization algorithm, although relatively computationally expensive on large graphs, gives very high-quality clustering results (better approximation of the optimal clustering) since the local optimization phase iteratively reduces the disagreement by greedily reassigning nodes to better clusters.
 
-// Unix
-spark-submit --master "local[*]" --class "final_project.clustering_verifier" target/scala-2.12/project_3_2.12-1.0.jar data/log_normal_100.csv data/log_normal_100_clustering.csv
-
-```
-
-## Deliverables
-* The output file for each test case.
-  * For naming conventions, if the input file is `XXX.csv`, please name the output file `XXX_solution.csv`.
-  * You'll need to compress the output files into a single ZIP or TAR file before pushing to GitHub. If they're still too large, you can upload the files to Google Drive and include the sharing link in your report.
-* The code you've applied to produce the solutions.
-  * You should add your source code to the same directory as the verifiers and push it to your repository.
-* A project report that includes the following:
-  * A table containing the objective of the solution (i.e. the size of matching or the number of disagreements of clustering) you obtained for each test case. The objectives must correspond to the matchings or the clusterings in your output files.
-  * An estimate of the amount of computation used for each test case. For example, "the program runs for 15 minutes on a 2x4 N1 core CPU in GCP." If you happen to be executing mulitple algorithms on a test case, report the total running time.
-  * Description(s) of your approach(es) for obtaining the matching or the clustering. It is possible to use different approaches for different cases. Please describe each of them as well as your general strategy if you were to receive a new test case. It is important that your approach can scale to larger cases if there are more machines.
-  * Discussion about the advantages of your algorithm(s). For example, does it guarantee a constraint on the number of shuffling rounds (say `O(log log n)` rounds)? Does it give you an approximation guarantee on the quality of the solution? If your algorithm has such a guarantee, please provide proofs or scholarly references as to why they hold in your report.
-* A 10-minute presentation during class time on 4/29 (Tue) and 5/1 (Thu).
-  * Note that the presentation date is before the final project submission deadline. This means that you could still be working on the project when you present. You may present the approaches you're currently trying. You can also present a preliminary result, like the matchings or the clusterings you have at the moment.
-
-## Grading policy
-* Quality of solutions (40%)
-  * For each test case, you'll receive at least 70% of full credit if your matching size is at 70% the best answer in the class or if your clustering size is at most 130% of the best in the class.
-  * **You will receive a 0 for any case where the verifier does not confirm that your output is a correct.** Please do not upload any output files that do not pass the verifier.
-* Project report (35%)
-  * Your report grade will be evaluated using the following criteria:
-    * Discussion of the merits of your algorithms such as the theoretical merits (i.e. if you can show your algorithm has certain guarantee).
-    * The scalability of your approach
-    * Depth of technicality
-    * Novelty
-    * Completeness
-    * Readability
-* Presentation (15%)
-* Formatting (10%)
-  * If the format of your submission does not adhere to the instructions (e.g. output file naming conventions), points will be deducted in this category.
-
-## Submission via GitHub
-Delete your project's current **README.md** file (the one you're reading right now) and include your report as a new **README.md** file in the project root directory. Have no fear—the README with the project description is always available for reading in the template repository you created your repository from. For more information on READMEs, feel free to visit [this page](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-readmes) in the GitHub Docs. You'll be writing in [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown). Be sure that your repository is up to date and you have pushed all of your project's code. When you're ready to submit, simply provide the link to your repository in the Canvas assignment's submission.
-
-## You must do the following to receive full credit:
-1. Create your report in the ``README.md`` and push it to your repo.
-2. In the report, you must include your teammates' full name in addition to any collaborators.
-3. Submit a link to your repo in the Canvas assignment.
-
-## Deadline and early submission bonus
-1. The deadline of the final project is on 5/4 (Sunday) 11:59PM.  
-2. **If you submit by 5/2 (Friday) 11:59PM, you will get 5% boost on the final project grade.**  
-3. The submission time is calculated from the last commit in the Git log.  
-4. **No extension beyond 5/4 11:59PM will be granted, even if you have unused late days.**  
+### Reference & Sketch
+Ailon, N., Charikar, M., & Newman, A. (2008). Aggregating Inconsistent Information: Ranking and Clustering. Journal of the ACM (JACM), 55(5).
