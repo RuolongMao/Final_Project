@@ -76,5 +76,6 @@ The parallelized PIVOT algorithm guarantees a small number of shuffle rounds in 
 The PIVOT + optimization algorithm, although relatively computationally expensive on large graphs, gives very high-quality clustering results (better approximation of the optimal clustering) since the local optimization phase iteratively reduces the disagreement by greedily reassigning nodes to better clusters.
 
 ### Reference & Sketch
-Ailon, N., Charikar, M., & Newman, A. (2008). Aggregating Inconsistent Information: Ranking and Clustering. Journal of the ACM (JACM), 55(5).
+Ailon, N., Charikar, M., & Newman, A. (2008). Aggregating Inconsistent Information: Ranking and Clustering. Journal of the ACM (JACM), 55(5).  
+
 Chierichetti, Flavio, Nilesh Dalvi, and Ravi Kumar. "Correlation clustering in mapreduce." Proceedings of the 20th ACM SIGKDD international conference on Knowledge discovery and data mining. 2014.
