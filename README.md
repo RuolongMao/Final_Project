@@ -77,3 +77,4 @@ The PIVOT + optimization algorithm, although relatively computationally expensiv
 
 ### Reference & Sketch
 Ailon, N., Charikar, M., & Newman, A. (2008). Aggregating Inconsistent Information: Ranking and Clustering. Journal of the ACM (JACM), 55(5).
+Chierichetti, Flavio, Nilesh Dalvi, and Ravi Kumar. "Correlation clustering in mapreduce." Proceedings of the 20th ACM SIGKDD international conference on Knowledge discovery and data mining. 2014.
