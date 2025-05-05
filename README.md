@@ -3,7 +3,7 @@
 ### Team member: Hoiting Mok, Ruolong Mao
 ### Output Link to Google Drive: https://drive.google.com/drive/folders/1UvV6OwYbKUzzn1nBRqn5k3AxYNTJOPMS?usp=drive_link
 
-## 1. A table containing the objective of the solution (i.e. the size of matching or the number of disagreements of clustering) you obtained for each test case. The objectives must correspond to the matchings or the clusterings in your output files.
+## 1. Objective of the Solution
 
 | Dataset | Edges | No. Disagreements | No. Clusters |
 |---------|-------|------------------|--------------|
@@ -14,7 +14,7 @@
 | com-orkut.ungraph | 63,555,749 | 110,073,940 | 47,165 |
 | twitter_original_edges | 117,185,083 | 85,131,188 | 1,116,196 |
 
-## 2. An estimate of the amount of computation used for each test case. For example, "the program runs for 15 minutes on a 2x4 N1 core CPU in GCP." If you happen to be executing multiple algorithms on a test case, report the total running time.
+## 2. Amount of Computation Used
 
 | Dataset | Duration | Machine |
 |---------|----------|---------|
@@ -74,11 +74,19 @@ If the input graph is very large, or if the system is running under limited memo
 
 ## 4. Algorithm Advantages and Guarantees
 
-The parallelized PIVOT algorithm guarantees a small number of shuffle rounds in a distributed system. It runs in O(log log n) rounds, where n is the number of vertices. Moreover, it guarantees a 3-approximation to the optimal correlation clustering.
+Our algorithm enhances the classic parallelized PIVOT framework with a connectivity-aware neighbor filtering mechanism. Instead of clustering all neighbors of a pivot indiscriminately, a neighbor is included only if it is connected to at least half of the pivot’s other neighbors—ensuring that clusters are not only pivot-centered but also internally cohesive. This filtering is iterative, and we adapt the connectivity threshold over time. This dynamic thresholding allows for precision early on and flexibility later, addressing a common weakness in greedy clustering: over-fragmentation.
 
-The PIVOT + optimization algorithm, although relatively computationally expensive on large graphs, gives very high-quality clustering results (better approximation of the optimal clustering) since the local optimization phase iteratively reduces the disagreement by greedily reassigning nodes to better clusters.
+The PIVOT + optimization algorithm, while more computationally intensive on large graphs, consistently produces high-quality clustering results — therefore achieving a closer approximation to the optimal clustering. This is due to the local refinement phase, which iteratively reduces disagreement by greedily reassigning nodes to neighboring clusters that offer a lower overall clustering cost.
 
-### Reference & Sketch
-Ailon, N., Charikar, M., & Newman, A. (2008). Aggregating Inconsistent Information: Ranking and Clustering. Journal of the ACM (JACM), 55(5).  
+Our parallelized PIVOT algorithm guarantees a threshold on the number of iterations in a distributed system. In all of our runs of the 6 graphs, the number of iterations we encountered are around 10 and less than 13.  With some research, we found out that according to Chierichetti, Flavio, Nilesh Dalvi, and Ravi Kumar(‘14), parallelized pivot algorithms theoretically terminates after at most O(1/e log n log 𝚫+) rounds, where e<1.2, n is the number of vertices, and 𝚫+ is the number of positive edges incident on every node.  
+
+Moreover, the parallelized PIVOT algorithm would give a 3-approximation to the optimal clustering as proven by Ailon, Charikar, and Newman in their analysis of the PIVOT algorithm(‘08). This comes from how the PIVOT algorithm has the nature of the mistakes in the clustering process. Consider 𝑢, 𝑣, 𝑤 ∈ 𝑉 : if 𝑒1 B {𝑢, 𝑣} and 𝑒2 B {𝑣, 𝑤} are in 𝐸+ but 𝑒3 B {𝑤, 𝑢} ∈ 𝐸−, then clustering those nodes has to produce at least one mistake. The triplet (𝑒1, 𝑒2, 𝑒3) is called a bad triangle(‘25). Since every bad triangle inherently causes at least one error in any clustering configuration—including the optimal one—the total number of disjoint bad triangles serves as a lower bound on the minimum possible disagreement achievable. In the context of the pivot algorithm, where only the direct neighbors of a selected pivot are clustered together, errors can occur in two primary ways. First, two dissimilar nodes (connected by a negative edge) may be grouped into the same cluster if both are neighbors of the pivot, resulting in an intra-cluster negative edge—this occurs when the pivot is the common endpoint of two positive edges in a bad triangle. Alternatively, if the pivot is an endpoint of the negative edge in a bad triangle, only one of the two positive edges may be internal to the cluster, while the other becomes an inter-cluster edge, thereby contributing to the overall disagreement.
+
+We acknowledge that the main limitation of our project lies in the fact that we primarily concentrated on enhancing one core version of the parallel pivot algorithm discussed in class — finding a minimum vertex in a neighborhood and marking it as the pivot. However, as we progressed into the final research phase, we encountered numerous scholarly papers that opened up many other experimental possibilities. If time permits for further exploration of this topic this summer, we would aim to refine our code by incorporating additional research, given the technical complexity involved.
+
+### References
+Ailon, Nir, Moses Charikar, and Alantha Newman. "Aggregating inconsistent information: ranking and clustering." Journal of the ACM (JACM) 55.5 (2008): 1-27.
+
+Cambus, Mélanie, Fabian Kuhn, Etna Lindy, Shreyas Pai, and Jara Uitto. A (3 + ε)-Approximate Correlation Clustering Algorithm in Dynamic Streams. TheoretiCS, vol. 4, no. 6, 2025, pp. 1–19.
 
 Chierichetti, Flavio, Nilesh Dalvi, and Ravi Kumar. "Correlation clustering in mapreduce." Proceedings of the 20th ACM SIGKDD international conference on Knowledge discovery and data mining. 2014.
