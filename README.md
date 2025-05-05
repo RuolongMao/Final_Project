@@ -1,7 +1,7 @@
 # Large Scale Data Processing: Final Project
 
 ### Team member: Hoiting Mok, Ruolong Mao
-### Output Link to Google Drive: https://drive.google.com/drive/folders/1UvV6OwYbKUzzn1nBRqn5k3AxYNTJOPMS?usp=drive_link
+### Output Link to Google Drive: [https://drive.google.com/drive/folders/1UvV6OwYbKUzzn1nBRqn5k3AxYNTJOPMS?usp=drive_link](https://drive.google.com/file/d/1tQnFdVCrERT-AdGSCXJZB_TCbJqC2ff7/view?usp=drive_link)
 
 ## 1. Objective of the Solution
 
