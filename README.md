@@ -8,10 +8,10 @@
 |---------|-------|------------------|--------------|
 | log_normal_100 | 2,671 | 1,711 | 11 |
 | musae_ENGB | 35,324 | 33,162 | 5,386 |
-| soc-pokec-relationships | 22,301,964 | 20,768,386 | 209,088 |
-| soc-LiveJournal1 | 42,851,237 | 36,727,198 | 463,864 |
-| com-orkut.ungraph | 63,555,749 | 110,057,584 | 47,245 |
-| twitter_original_edges | 117,185,083 | 85,123,563 | 1,115,984 |
+| soc-pokec-relationships | 22,301,964 | 20,767,607 | 209,273 |
+| soc-LiveJournal1 | 42,851,237 | 36,758,906 | 464,347 |
+| com-orkut.ungraph | 63,555,749 | 110,057,584 | 47,165 |
+| twitter_original_edges | 110,073,940 | 85,131,188 | 1,116,196 |
 
 ## 2. An estimate of the amount of computation used for each test case. For example, "the program runs for 15 minutes on a 2x4 N1 core CPU in GCP." If you happen to be executing multiple algorithms on a test case, report the total running time.
 
@@ -19,10 +19,10 @@
 |---------|----------|---------|
 | log_normal_100 | 3.036s | Local |
 | musae_ENGB | 5.736s | Local |
-| soc-pokec-relationships | 4min 13s | GCP |
-| soc-LiveJournal1 | 10min 6s | GCP |
-| com-orkut.ungraph | 9min 1s | GCP |
-| twitter_original_edges | 18min 57s | GCP |
+| soc-pokec-relationships | 4min 8s | GCP |
+| soc-LiveJournal1 | 12min 49s | GCP |
+| com-orkut.ungraph | 8min 6s | GCP |
+| twitter_original_edges | 19min 26s | GCP |
 
 ### GCP Cluster Configuration
 - Master Node: Standard (1 master, N workers)
