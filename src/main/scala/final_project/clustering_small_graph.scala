@@ -19,15 +19,12 @@ object clustering_small_graph {
             val startTime = System.currentTimeMillis()
             iteration += 1
 
-            // Create a broadcast variable for vertex cluster assignments
             val vertexClusters = currentGraph.vertices.collectAsMap()
             val bcVertexClusters = sc.broadcast(vertexClusters)
             
-            // Calculate cluster sizes
             val clusterSizes = currentGraph.vertices.map(v => (v._2, 1L)).reduceByKey(_ + _).collectAsMap()
             val bcClusterSizes = sc.broadcast(clusterSizes)
 
-            // Calculate vertex degrees and same-cluster edges
             val degrees = currentGraph.degrees
             val graphWithDegrees = currentGraph.outerJoinVertices(degrees) {
                 case (id, cluster, degOpt) => (cluster, degOpt.getOrElse(0))
@@ -45,22 +42,15 @@ object clustering_small_graph {
                 case (id, (cluster, degree), agreementOpt) => (cluster, degree, agreementOpt.getOrElse(0))
             }
 
-            // Calculate potential improvements for each vertex
             val vertexNeighbors = currentGraph.collectNeighborIds(EdgeDirection.Either)
             
             val potentialImprovements = vertexNeighbors.map { case (vid, neighbors) =>
                 val currentCluster = vertexClusters(vid)
                 val currentClusterSize = clusterSizes.getOrElse(currentCluster, 0L)
                 
-                // How many neighbors are in the same cluster as this vertex
                 val currentSameClusterNeighbors = neighbors.count(nid => bcVertexClusters.value.getOrElse(nid, -1L) == currentCluster)
-                
-                // Missing edges within current cluster + cross-cluster edges
-                // Missing edges = (cluster size - 1 - same cluster neighbors)
-                // Cross-cluster edges = (total neighbors - same cluster neighbors)
                 val currentDisagreement = (currentClusterSize - 1 - currentSameClusterNeighbors) + (neighbors.length - currentSameClusterNeighbors)
                 
-                // Find best alternative cluster
                 val neighborClusters = neighbors.map(nid => bcVertexClusters.value.getOrElse(nid, -1L)).filter(_ != currentCluster).distinct
                 
                 // Calculate disagreement if vertex moved to each neighbor cluster
@@ -68,10 +58,8 @@ object clustering_small_graph {
                     val newClusterSize = bcClusterSizes.value.getOrElse(cluster, 0L)
                     val sameClusterNeighbors = neighbors.count(nid => bcVertexClusters.value.getOrElse(nid, -1L) == cluster)
                     
-                    // Missing edges within new cluster + cross-cluster edges
                     val newDisagreement = ((newClusterSize + 1) - 1 - sameClusterNeighbors) + (neighbors.length - sameClusterNeighbors)
                     
-                    // Need to account for impact on original cluster after removing this vertex
                     val oldClusterRemovalDisagreement = (currentClusterSize - 1) - 1 - currentSameClusterNeighbors
                     
                     (cluster, newDisagreement - currentDisagreement)
@@ -85,7 +73,6 @@ object clustering_small_graph {
                 }
             }.filter(_.isDefined).map(_.get)
 
-            // Apply improvements
             val improvements = potentialImprovements.collect()
             if (improvements.isEmpty) {
                 improved = false
@@ -104,11 +91,9 @@ object clustering_small_graph {
             val endTime = System.currentTimeMillis()
         }
 
-        // Calculate final disagreement for logging
         val finalVertexClusters = currentGraph.vertices.collectAsMap()
         val bcFinalVertexClusters = sc.broadcast(finalVertexClusters)
         
-        // Calculate cross-cluster edges safely
         val crossClusterEdges = if (currentGraph.edges != null) {
             currentGraph.edges.filter { edge =>
                 val srcCluster = bcFinalVertexClusters.value.getOrElse(edge.srcId, -1L)
@@ -116,17 +101,14 @@ object clustering_small_graph {
                 srcCluster != dstCluster
             }.count()
         } else {
-            // Alternative calculation if edges RDD is null
             currentGraph.triplets.filter(triplet => 
                 triplet.srcAttr != triplet.dstAttr
             ).count()
         }
         
-        // Calculate missing intra-cluster edges using safer methods
         val finalClusterSizes = currentGraph.vertices.map(v => (v._2, 1L)).reduceByKey(_ + _).collectAsMap()
         val bcFinalClusterSizes = sc.broadcast(finalClusterSizes)
         
-        // Use collectNeighborIds instead of direct edge filtering to avoid NullPointerException
         val vertexNeighborIds = currentGraph.collectNeighborIds(EdgeDirection.Either)
         
         val missingEdges = vertexNeighborIds.join(currentGraph.vertices).map { 
@@ -135,7 +117,7 @@ object clustering_small_graph {
                 val sameClusterNeighbors = neighbors.count(nid => 
                     bcFinalVertexClusters.value.getOrElse(nid, -1L) == cluster)
                 (clusterSize - 1 - sameClusterNeighbors)
-        }.sum() / 2 // Divide by 2 since each missing edge is counted twice
+        }.sum() / 2 // since each missing edge is counted twice
         
         val totalDisagreement = crossClusterEdges + missingEdges
         
@@ -144,9 +126,7 @@ object clustering_small_graph {
 
     def pivotClustering(graph: Graph[Int, Int], sc: SparkContext): Graph[Long, Int] = {
         // 1746364080000L
-        // val rand = new Random(System.currentTimeMillis())
-        val rand = new Random(1746364080000L)
-
+        val rand = new Random(System.currentTimeMillis())
 
         val piValues = graph.vertices.map { case (vid, _) =>
             val vertexRand = new Random(rand.nextLong() ^ vid)
@@ -213,19 +193,14 @@ object clustering_small_graph {
                 val thisPivotClusterId = clusterId
                 clusterId += 1
                 
-                // Define a minimum connectivity threshold - neighbors must be connected to at least this fraction
                 val connectivityThreshold = 0.5
-                
-                // Iterative filtering approach to ensure connectivity requirements
                 var currentNeighbors = neighborList
                 var prevSize = -1
                 var stableCluster = false
                 
-                // Keep filtering until the cluster stabilizes (no more vertices are removed)
                 while (!stableCluster) {
                     prevSize = currentNeighbors.size
                     
-                    // For each current neighbor, check how well it connects to others
                     val neighborConnectivity = currentNeighbors.map { nid =>
                         val numConnections = currentNeighbors.count(other =>
                             other != nid && bcEdgeSet.value.contains((nid, other))
@@ -234,24 +209,19 @@ object clustering_small_graph {
                         val connectivityRatio = if (currentNeighbors.size > 1) {
                             numConnections.toDouble / (currentNeighbors.size - 1)
                         } else {
-                            1.0 // If it's the only neighbor, it has perfect connectivity by definition
+                            1.0 // If only neighbor
                         }
                         (nid, connectivityRatio)
                     }
                     
-                    // Filter out neighbors that don't meet the threshold
                     currentNeighbors = neighborConnectivity
                         .filter(_._2 >= connectivityThreshold)
                         .map(_._1)
                     
-                    // Check if the cluster has stabilized
                     stableCluster = currentNeighbors.size == prevSize
                 }
                 
-                // Add the pivot to the final cluster members
                 val clusterMembers = pivotId +: currentNeighbors
-                
-                // Return vertex to cluster ID mappings
                 clusterMembers.map(vid => (vid, thisPivotClusterId))
             }
 
