@@ -60,7 +60,7 @@ object clustering_general {
                 } else {
                     neighbors.forall { nid =>
                         val neighborPiVal = bcNeighborPiMap.value.getOrElse(nid, Double.MaxValue)
-                        piVal < neighborPiVal
+                        piVal <= neighborPiVal
                     }
                 }
             }
