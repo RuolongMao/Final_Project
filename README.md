@@ -10,8 +10,8 @@
 | musae_ENGB | 35,324 | 33,162 | 5,386 |
 | soc-pokec-relationships | 22,301,964 | 20,767,607 | 209,273 |
 | soc-LiveJournal1 | 42,851,237 | 36,758,906 | 464,347 |
-| com-orkut.ungraph | 63,555,749 | 110,057,584 | 47,165 |
-| twitter_original_edges | 110,073,940 | 85,131,188 | 1,116,196 |
+| com-orkut.ungraph | 63,555,749 | 110,073,940 | 47,165 |
+| twitter_original_edges | 117,185,083 | 85,131,188 | 1,116,196 |
 
 ## 2. An estimate of the amount of computation used for each test case. For example, "the program runs for 15 minutes on a 2x4 N1 core CPU in GCP." If you happen to be executing multiple algorithms on a test case, report the total running time.
 
