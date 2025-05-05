@@ -121,13 +121,11 @@ object clustering_og {
 
             clustered = clustered.union(pivotAndNeighborsRDD)
 
-            // remove clustered vertices
             val clusteredIds = pivotAndNeighborsRDD.map(_._1).collect().toSet
             val bcClustered = sc.broadcast(clusteredIds)
 
             currentVertices = currentVertices.filter { case (vid, _) => !bcClustered.value.contains(vid) }
 
-            // update new graph according to current vertices
             val newGraph = Graph(currentVertices, currentEdges).subgraph(
                 vpred = (id, _) => !bcClustered.value.contains(id),
                 epred = e => !bcClustered.value.contains(e.srcId) && !bcClustered.value.contains(e.dstId)
@@ -146,12 +144,10 @@ object clustering_og {
         println(s"Clustering complete. Total clusters: ${clusterId - 1}")
         println("**----------------------------------------------------**")
         
-        // Create final graph with cluster assignments
         val clusteredGraph = Graph(clustered, graph.edges)
         clusteredGraph
     }
 
-    // Break helper
     def break = throw new BreakException()
     class BreakException extends RuntimeException
 
