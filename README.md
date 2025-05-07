@@ -9,10 +9,10 @@
 |---------|-------|------------------|--------------|
 | log_normal_100 | 2,671 | 1,711 | 11 |
 | musae_ENGB | 35,324 | 33,162 | 5,386 |
-| soc-pokec-relationships | 22,301,964 | 20,767,607 | 209,273 |
-| soc-LiveJournal1 | 42,851,237 | 36,758,906 | 464,347 |
-| com-orkut.ungraph | 63,555,749 | 110,073,940 | 47,165 |
-| twitter_original_edges | 117,185,083 | 85,131,188 | 1,116,196 |
+| soc-pokec-relationships | 22,301,964 | 32,852,646 | 209,273 |
+| soc-LiveJournal1 | 42,851,237 | 69,466,826 | 464,347 |
+| com-orkut.ungraph | 63,555,749 | 309,071,437 | 47,165 |
+| twitter_original_edges | 117,185,083 | 123,621,158 | 1,116,196 |
 
 ## 2. Amount of Computation Used
 
